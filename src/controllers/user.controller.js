@@ -4,7 +4,8 @@ import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
 
 
-export const createUser = asyncHandler = async (req, res) => {
+
+export const createUser = asyncHandler(async (req, res) => {
     try {
         const { name, email, password } = req.body;
         if ( !name || !email || !password ) {
@@ -24,10 +25,10 @@ export const createUser = asyncHandler = async (req, res) => {
 
 
     } catch (error) {
-        console.error(`Error: ${error.message}`);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: "something went wrong"});
     }
-};
+});
+
 
 export const signinUser = asyncHandler(async (req, res) => {
    try {
