@@ -1,0 +1,12 @@
+{
+  "name": "expense-tracker",
+  "version": "1.0.0",
+  "description": "expense tracker",
+  "license": "ISC",
+  "author": "Bipasa Roy",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "expense"
+  }
+}
