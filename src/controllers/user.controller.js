@@ -4,6 +4,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import transporter from "../utils/nodemailer.js";
 
 
 export const createUser = asyncHandler(async (req, res) => {
@@ -26,6 +27,20 @@ export const createUser = asyncHandler(async (req, res) => {
 
     // create user
     const user = await User.create({ name, email, password: hashedPassword });
+
+
+    //send welcome email
+
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: user.email,
+      subject: 'Welcome to Expense Tracker',
+      text: `Hello ${user.name},\n\nWelcome to Expense Tracker! We're excited to have you on board.\n\nBest regards,\nExpense Tracker Team`
+    };
+
+    await transporter.sendMail(mailOptions);
+
+
 
     return res
       .status(201)
