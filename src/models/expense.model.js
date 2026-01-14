@@ -19,7 +19,7 @@ const expenseSchema = new Schema({
         required: true,
         enum: [
             "Food",
-            "Transportation",
+            "Transport",
             "Utilities",
             "Entertainment",
             "Healthcare",

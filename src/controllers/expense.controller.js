@@ -52,9 +52,6 @@ export const updateExpense = asyncHandler(async (req, res) => {
 });
 
 
-
-
-
 export const deleteExpense = asyncHandler(async (req, res) => {
     const expenseId = req.params.id;
     const userId = req.user.id; 
@@ -63,4 +60,29 @@ export const deleteExpense = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Expense not found");
     }
     res.status(200).json(new ApiResponse(200, null, "Expense deleted successfully"));
+});
+
+// Update only category
+export const updateCategory = asyncHandler(async (req, res) => {
+  const expenseId = req.params.id;
+  const userId = req.user.id;
+  const { category } = req.body;
+
+  if (!category) {
+    throw new ApiError(400, "Category is required");
+  }
+
+  const expense = await Expense.findOneAndUpdate(
+    { _id: expenseId, user: userId },   
+    { category },                        
+    { new: true }
+  );
+
+  if (!expense) {
+    throw new ApiError(404, "Expense not found");
+  }
+
+  res.status(200).json(
+    new ApiResponse(200, expense, "Category updated successfully")
+  );
 });

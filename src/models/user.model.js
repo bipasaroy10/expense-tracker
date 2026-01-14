@@ -13,7 +13,14 @@ const userSchema = new Schema({
     password: {
         type: String,
         required: true
-    }
+    },
+    otp: {
+  type: String
+},
+otpExpiresAt: {
+  type: Date
+}
+
 }, {timestamps: true});
 
 export const User = mongoose.model("User", userSchema);

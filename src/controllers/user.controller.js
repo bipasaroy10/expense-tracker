@@ -115,3 +115,115 @@ export const signoutUser = asyncHandler(async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
+
+//forget password - send OTP
+export const forgetPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // clear old OTP (important)
+    user.otp = undefined;
+    user.otpExpiresAt = undefined;
+
+    // save new OTP
+    user.otp = otp;
+    user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    await user.save();
+
+    // send OTP email
+    await transporter.sendMail({
+      from: process.env.SENDER_EMAIL,
+      to: user.email,
+      subject: "Password Reset OTP",
+      text: `Hello ${user.name},
+
+Your OTP for password reset is: ${otp}
+
+This OTP is valid for 10 minutes.
+
+If you did not request this, please ignore this email.
+
+Best regards,
+The Team Expense Tracker`,
+    });
+
+    console.log("OTP SENT TO:", user.email);
+
+    return res.status(200).json({ message: "OTP sent to email" });
+
+  } catch (err) {
+    console.error("FORGET PASSWORD ERROR:", err);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+//otp verification for forget password and reset password
+export const verifyForgetPasswordOtp = async (req, res) => {
+    try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+        return res.status(400).json({ message: "Email, OTP, and new password are required" });
+    }
+    const user = await User.findOne({ email });
+    if (!user) {
+        return res.status(404).json({ message: "User not found" });
+    }
+    if (
+  !user.otp ||
+  user.otp.toString() !== otp.toString() ||
+  !user.otpExpiresAt ||
+  user.otpExpiresAt < Date.now()
+) {
+  return res.status(400).json({ message: "Invalid or expired OTP" });
+}
+
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    await User.findByIdAndUpdate(
+        user._id, 
+        { 
+            $set: { password: hashedPassword }, 
+            $unset: { otp: 1, otpExpiresAt: 1 }
+        });
+
+    // send reset password email
+    const resetMail = {
+        from: process.env.SENDER_EMAIL,
+        to: user.email,
+        subject: "Password Reset Successful",
+        text: `Hello ${user.name},
+
+Your password has been successfully reset.
+
+You can now sign in using your email and new password.
+
+Best regards,
+
+The Team Expense Tracker`
+    };
+
+    await transporter.sendMail(resetMail);
+
+    console.log("PASSWORD RESET SUCCESS:", user.email);
+
+    return res.status(200).json({ message: "Password reset successfully" });
+    } catch (err) {
+    console.error("VERIFY FORGET PASSWORD OTP ERROR:", err.message);
+    return res.status(500).json({ message: "Something went wrong" });
+    }
+};
